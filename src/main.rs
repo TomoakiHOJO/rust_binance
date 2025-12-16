@@ -4,6 +4,8 @@ use tokio_tungstenite::{connect_async, tungstenite::Message};
 // Connects to Binance trade stream and prints incoming raw messages
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+	let _ = rustls::crypto::ring::default_provider().install_default();
+	
 	let url = "wss://stream.binance.com:9443/ws/btcusdt@trade";
 	println!("Connecting to {url} ...");
 
