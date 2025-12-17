@@ -14,7 +14,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 最初のメッセージを送信（String -> Utf8Bytes へ変換）
     write
-        .send(Message::Text("こんにちは、2回目のローカルサーバー!".to_string().into()))
+        .send(Message::Text("こんにちは、1回目のローカルサーバー!".to_string().into()))
+        .await?;
+
+    write
+        .send(Message::Text("2回目のメッセージです。".to_string().into()))
         .await?;
 
     // サーバーからの1メッセージを受け取って表示して終了

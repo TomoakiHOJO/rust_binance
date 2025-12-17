@@ -1,5 +1,6 @@
 use futures_util::{SinkExt, StreamExt};
 use tokio::net::TcpListener;
+use tokio::time::{sleep, Duration};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::accept_async;
 
@@ -20,6 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("WebSocket 接続確立: {addr}");
 
             let (mut write, mut read) = ws_stream.split();
+            let mut s = 0;
 
             // クライアントからのメッセージを受信して処理する
             while let Some(msg) = read.next().await {
@@ -36,19 +38,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         // Ping を送って、クライアント側の Pong 応答をテストする
                         if let Err(e) = write
-                            .send(Message::Ping(b"ping from server".to_vec()))
+                            .send(Message::Ping(b"ping from server".to_vec().into()))
                             .await
                         {
                             eprintln!("send ping error: {e}");
                             break;
                         }
+                        s += 1;
+                        if s >= 2 {
+                            // break する前に少し待つ（Delay）
+                            sleep(Duration::from_secs(3)).await;
 
-                        // デモとして、1回メッセージを処理したらサーバー側から Close を送る
-                        if let Err(e) = write.send(Message::Close(None)).await {
-                            eprintln!("send close error: {e}");
+                            // 2回メッセージを処理したらサーバー側から Close を送る
+                            if let Err(e) = write.send(Message::Close(None)).await {
+                                eprintln!("send close error: {e}");
+                            }
+
+                            println!("server sent Close frame to {addr}");
+                            break;
                         }
-                        println!("server sent Close frame to {addr}");
-                        break;
                     }
                     Ok(Message::Ping(payload)) => {
                         println!("ping from client {addr}: {:?}", payload);
