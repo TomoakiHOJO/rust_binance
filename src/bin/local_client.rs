@@ -14,16 +14,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 最初のメッセージを送信（String -> Utf8Bytes へ変換）
     write
-        .send(Message::Text("こんにちは、ローカルサーバー!".to_string().into()))
+        .send(Message::Text("こんにちは、2回目のローカルサーバー!".to_string().into()))
         .await?;
 
     // サーバーからの1メッセージを受け取って表示して終了
-    if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => println!("from server: {text}"),
-            other => println!("other message from server: {:?}", other),
-        }
-    }
-
+    while let Some(msg) = read.next().await {
+		match msg? {
+			Message::Text(text) => println!("受け取ったテキスト: {text}"),
+			
+			Message::Binary(bin) => println!("trade (binary): {:?}", bin),
+			Message::Ping(payload) => {
+				write.send(Message::Pong(payload)).await.ok();
+			}
+			Message::Close(frame) => {
+				println!("server closed connection: {:?}", frame);
+				break;
+			}
+			_ => (),
+		}
+	}
     Ok(())
 }

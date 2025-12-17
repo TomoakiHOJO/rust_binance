@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let (mut write, mut read) = ws_stream.split();
 
-            // クライアントからのメッセージを受信して、そのままエコーする
+            // クライアントからのメッセージを受信して処理する
             while let Some(msg) = read.next().await {
                 match msg {
                     Ok(Message::Text(text)) => {
@@ -33,6 +33,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             eprintln!("send error: {e}");
                             break;
                         }
+
+                        // Ping を送って、クライアント側の Pong 応答をテストする
+                        if let Err(e) = write
+                            .send(Message::Ping(b"ping from server".to_vec()))
+                            .await
+                        {
+                            eprintln!("send ping error: {e}");
+                            break;
+                        }
+
+                        // デモとして、1回メッセージを処理したらサーバー側から Close を送る
+                        if let Err(e) = write.send(Message::Close(None)).await {
+                            eprintln!("send close error: {e}");
+                        }
+                        println!("server sent Close frame to {addr}");
+                        break;
+                    }
+                    Ok(Message::Ping(payload)) => {
+                        println!("ping from client {addr}: {:?}", payload);
+                        // Ping を受け取ったら Pong で返す
+                        if let Err(e) = write.send(Message::Pong(payload)).await {
+                            eprintln!("send pong error: {e}");
+                            break;
+                        }
+                    }
+                    Ok(Message::Pong(payload)) => {
+                        println!("pong from client {addr}: {:?}", payload);
                     }
                     Ok(Message::Close(frame)) => {
                         println!("closed by client: {:?}", frame);
