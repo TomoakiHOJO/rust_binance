@@ -17,6 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	while let Some(msg) = read.next().await {
 		match msg? {
 			Message::Text(text) => println!("trade: {text}"),
+			
 			Message::Binary(bin) => println!("trade (binary): {:?}", bin),
 			Message::Ping(payload) => {
 				write.send(Message::Pong(payload)).await.ok();
@@ -25,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 				println!("server closed connection: {:?}", frame);
 				break;
 			}
-			_ => {}
+			_ => (),
 		}
 	}
 
