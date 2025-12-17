@@ -26,7 +26,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match msg {
                     Ok(Message::Text(text)) => {
                         println!("from {addr}: {text}");
-                        if let Err(e) = write.send(Message::Text(format!("echo: {text}"))).await {
+                        if let Err(e) = write
+                            .send(Message::Text(format!("echo: {text}").into()))
+                            .await
+                        {
                             eprintln!("send error: {e}");
                             break;
                         }

@@ -12,9 +12,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (mut write, mut read) = ws_stream.split();
 
-    // 最初のメッセージを送信
+    // 最初のメッセージを送信（String -> Utf8Bytes へ変換）
     write
-        .send(Message::Text("こんにちは、ローカルサーバー!".to_string()))
+        .send(Message::Text("こんにちは、ローカルサーバー!".to_string().into()))
         .await?;
 
     // サーバーからの1メッセージを受け取って表示して終了
